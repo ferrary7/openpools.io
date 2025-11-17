@@ -17,9 +17,32 @@ export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const handlePdfKeywordsExtracted = (extractedKeywords) => {
-    // Store keywords and move to next step
+  const handlePdfKeywordsExtracted = async (extractedKeywords) => {
+    // Store PDF keywords temporarily and save to database immediately
     setKeywords(extractedKeywords)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        // Save PDF keywords to database so they can be merged with LinkedIn later
+        await supabase
+          .from('keyword_profiles')
+          .upsert(
+            {
+              user_id: user.id,
+              keywords: extractedKeywords,
+              total_keywords: extractedKeywords.length,
+              last_updated: new Date().toISOString(),
+            },
+            { onConflict: 'user_id' }
+          )
+      }
+    } catch (error) {
+      console.error('Error saving PDF keywords:', error)
+    }
+
     setStep(2)
   }
 
@@ -27,10 +50,21 @@ export default function OnboardingPage() {
     setExtracting(true)
 
     try {
-      // If we already have keywords from PDF and only adding LinkedIn, merge them
-      if (keywords.length > 0 && linkedinText) {
-        const sources = [{ text: linkedinText, source: 'linkedin' }]
+      // Build sources array for extraction
+      const sources = []
 
+      // Add resume text if available
+      if (resumeText) {
+        sources.push({ text: resumeText, source: 'resume' })
+      }
+
+      // Add LinkedIn text if available
+      if (linkedinText) {
+        sources.push({ text: linkedinText, source: 'linkedin' })
+      }
+
+      // If we have sources to extract from, do the extraction
+      if (sources.length > 0) {
         const response = await fetch('/api/extract-keywords', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -43,33 +77,14 @@ export default function OnboardingPage() {
           throw new Error(data.error || 'Failed to extract keywords')
         }
 
-        // Merge with existing PDF keywords
+        // If we already have keywords from PDF, the API will merge them automatically
+        // because the API checks for existing keyword_profiles and merges
         setKeywords(data.keywords)
-      } else {
-        // Extract from text sources
-        const sources = []
-
-        if (resumeText) {
-          sources.push({ text: resumeText, source: 'resume' })
-        }
-
-        if (linkedinText) {
-          sources.push({ text: linkedinText, source: 'linkedin' })
-        }
-
-        const response = await fetch('/api/extract-keywords', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sources }),
-        })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to extract keywords')
-        }
-
-        setKeywords(data.keywords)
+      } else if (keywords.length > 0) {
+        // If no new text sources but we have PDF keywords, just proceed to review
+        setStep(3)
+        setExtracting(false)
+        return
       }
 
       setStep(3)
