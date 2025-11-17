@@ -131,15 +131,84 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Journal ID is required' }, { status: 400 })
     }
 
-    const { error } = await supabase
+    // Get the journal entry to retrieve its keywords
+    const { data: journal, error: fetchError } = await supabase
+      .from('journals')
+      .select('extracted_keywords')
+      .eq('id', journalId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (fetchError || !journal) {
+      return NextResponse.json({ error: 'Journal not found' }, { status: 404 })
+    }
+
+    // Delete the journal entry
+    const { error: deleteError } = await supabase
       .from('journals')
       .delete()
       .eq('id', journalId)
       .eq('user_id', user.id)
 
-    if (error) {
-      console.error('Error deleting journal:', error)
+    if (deleteError) {
+      console.error('Error deleting journal:', deleteError)
       return NextResponse.json({ error: 'Failed to delete journal' }, { status: 500 })
+    }
+
+    // Remove journal keywords from user's keyword profile
+    if (journal.extracted_keywords && journal.extracted_keywords.length > 0) {
+      const { data: existingProfile } = await supabase
+        .from('keyword_profiles')
+        .select('keywords')
+        .eq('user_id', user.id)
+        .single()
+
+      if (existingProfile && existingProfile.keywords) {
+        // Create a map of keywords from the journal entry
+        const journalKeywordMap = new Map(
+          journal.extracted_keywords.map(kw => [kw.keyword.toLowerCase(), kw])
+        )
+
+        // Filter out keywords that came only from this journal entry
+        const updatedKeywords = existingProfile.keywords.filter(kw => {
+          const journalKw = journalKeywordMap.get(kw.keyword.toLowerCase())
+
+          // Keep keyword if it's not from journal at all
+          if (!journalKw) return true
+
+          // Keep keyword if it has sources other than journal
+          if (kw.sources && kw.sources.length > 1) {
+            // Remove 'journal' from sources
+            return true
+          }
+
+          // Remove keyword if it only came from journal
+          if (kw.sources && kw.sources.length === 1 && kw.sources[0] === 'journal') {
+            return false
+          }
+
+          return true
+        }).map(kw => {
+          // For keywords with multiple sources, remove 'journal' from sources
+          if (kw.sources && kw.sources.includes('journal')) {
+            return {
+              ...kw,
+              sources: kw.sources.filter(s => s !== 'journal')
+            }
+          }
+          return kw
+        })
+
+        // Update the keyword profile
+        await supabase
+          .from('keyword_profiles')
+          .update({
+            keywords: updatedKeywords,
+            total_keywords: updatedKeywords.length,
+            last_updated: new Date().toISOString(),
+          })
+          .eq('user_id', user.id)
+      }
     }
 
     return NextResponse.json({ success: true })

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 // PATCH - Accept or reject collab request
@@ -76,6 +76,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params
+    console.log('DELETE collab request - ID:', id, 'User:', user.id)
 
     // Get the collab to verify user is part of it
     const { data: collab, error: fetchError } = await supabase
@@ -85,44 +86,90 @@ export async function DELETE(request, { params }) {
       .single()
 
     if (fetchError || !collab) {
+      console.error('Collab not found:', fetchError)
       return NextResponse.json({ error: 'Collaboration not found' }, { status: 404 })
     }
 
+    console.log('Found collab:', collab)
+
     // Verify user is either sender or receiver
     if (collab.sender_id !== user.id && collab.receiver_id !== user.id) {
+      console.error('User not authorized:', { user: user.id, sender: collab.sender_id, receiver: collab.receiver_id })
       return NextResponse.json({ error: 'Not authorized to delete this collaboration' }, { status: 403 })
     }
 
-    // Delete all messages between these two users
-    const { error: messagesError } = await supabase
-      .from('messages')
-      .delete()
-      .or(`and(sender_id.eq.${collab.sender_id},receiver_id.eq.${collab.receiver_id}),and(sender_id.eq.${collab.receiver_id},receiver_id.eq.${collab.sender_id})`)
+    // Use service client for deletions (bypasses RLS after we've verified authorization)
+    const serviceSupabase = createServiceClient()
 
-    if (messagesError) {
-      console.error('Error deleting messages:', messagesError)
-      // Continue even if message deletion fails
+    // Delete all messages between these two users (both directions)
+    console.log('Deleting messages...')
+    const { data: deletedMessages1, error: msg1Error, count: msgCount1 } = await serviceSupabase
+      .from('messages')
+      .delete({ count: 'exact' })
+      .eq('sender_id', collab.sender_id)
+      .eq('receiver_id', collab.receiver_id)
+
+    if (msg1Error) {
+      console.error('Error deleting messages (direction 1):', msg1Error)
+    } else {
+      console.log('Deleted messages (direction 1):', msgCount1)
+    }
+
+    const { data: deletedMessages2, error: msg2Error, count: msgCount2 } = await serviceSupabase
+      .from('messages')
+      .delete({ count: 'exact' })
+      .eq('sender_id', collab.receiver_id)
+      .eq('receiver_id', collab.sender_id)
+
+    if (msg2Error) {
+      console.error('Error deleting messages (direction 2):', msg2Error)
+    } else {
+      console.log('Deleted messages (direction 2):', msgCount2)
     }
 
     // Delete notifications related to this collaboration
-    // Delete notifications where user_id is one party and related_user_id is the other
-    const { error: notificationsError } = await supabase
+    console.log('Deleting notifications...')
+    const { data: deletedNotifs1, error: notif1Error, count: notifCount1 } = await serviceSupabase
       .from('notifications')
-      .delete()
-      .or(`and(user_id.eq.${collab.sender_id},related_user_id.eq.${collab.receiver_id}),and(user_id.eq.${collab.receiver_id},related_user_id.eq.${collab.sender_id})`)
+      .delete({ count: 'exact' })
+      .eq('user_id', collab.sender_id)
+      .eq('related_user_id', collab.receiver_id)
 
-    if (notificationsError) {
-      console.error('Error deleting notifications:', notificationsError)
-      // Continue even if notification deletion fails
+    if (notif1Error) {
+      console.error('Error deleting notifications (direction 1):', notif1Error)
+    } else {
+      console.log('Deleted notifications (direction 1):', notifCount1)
+    }
+
+    const { data: deletedNotifs2, error: notif2Error, count: notifCount2 } = await serviceSupabase
+      .from('notifications')
+      .delete({ count: 'exact' })
+      .eq('user_id', collab.receiver_id)
+      .eq('related_user_id', collab.sender_id)
+
+    if (notif2Error) {
+      console.error('Error deleting notifications (direction 2):', notif2Error)
+    } else {
+      console.log('Deleted notifications (direction 2):', notifCount2)
     }
 
     // Delete the collaboration
-    const { error: deleteError } = await supabase
+    console.log('Deleting collaboration...')
+    const { data: deletedCollab, error: deleteError, count } = await serviceSupabase
       .from('collaborations')
-      .delete()
+      .delete({ count: 'exact' })
       .eq('id', id)
+      .select()
 
-    if (deleteError) throw deleteError
+    if (deleteError) {
+      console.error('Error deleting collaboration:', deleteError)
+      return NextResponse.json({
+        error: 'Failed to delete collaboration: ' + deleteError.message,
+        details: deleteError
+      }, { status: 500 })
+    }
+
+    console.log('Collaboration deleted successfully:', { deletedCollab, count, deletedCount: deletedCollab?.length })
 
     return NextResponse.json({
       success: true,

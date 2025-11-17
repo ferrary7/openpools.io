@@ -133,7 +133,7 @@ export default function ChatPage() {
   const handleRemoveConnection = async () => {
     if (!collabId) return
 
-    if (!confirm(`Are you sure you want to remove your connection with ${profile?.full_name}? This will delete all your messages and you'll need to send a new request to collaborate again.`)) {
+    if (!confirm(`Are you sure you want to remove your collaboration with ${profile?.full_name}? This will delete all your messages and you'll need to send a new request to collaborate again.`)) {
       return
     }
 
@@ -150,7 +150,8 @@ export default function ChatPage() {
         throw new Error(data.error || 'Failed to remove collaboration')
       }
 
-      // Redirect to collaborators page after removal
+      // Wait a bit for database to commit, then redirect
+      await new Promise(resolve => setTimeout(resolve, 500))
       router.push('/collaborators')
     } catch (err) {
       alert('Error removing connection: ' + err.message)

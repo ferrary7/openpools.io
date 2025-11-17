@@ -57,7 +57,7 @@ export default function CollaboratorsPage() {
   }
 
   const handleRemoveConnection = async (collabId, collaboratorName) => {
-    if (!confirm(`Are you sure you want to remove your connection with ${collaboratorName}? This will delete all your messages and you'll need to send a new request to collaborate again.`)) {
+    if (!confirm(`Are you sure you want to remove your collaboration with ${collaboratorName}? This will delete all your messages and you'll need to send a new request to collaborate again.`)) {
       return
     }
 
@@ -74,8 +74,12 @@ export default function CollaboratorsPage() {
         throw new Error(data.error || 'Failed to remove collaboration')
       }
 
+      // Wait a bit for database to commit
+      await new Promise(resolve => setTimeout(resolve, 500))
+
       // Remove from local state
       setCollaborators(prev => prev.filter(c => c.id !== collabId))
+      alert('Connection removed successfully')
     } catch (err) {
       alert('Error removing connection: ' + err.message)
     } finally {

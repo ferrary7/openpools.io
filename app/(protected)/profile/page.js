@@ -399,9 +399,6 @@ export default function ProfilePage() {
 
       {/* Keywords */}
       <div className="card">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">
-          Your Keywords ({keywordProfile?.total_keywords || 0})
-        </h2>
         {keywordProfile?.keywords ? (
           <>
             <KeywordDisplay keywords={keywordProfile.keywords} />

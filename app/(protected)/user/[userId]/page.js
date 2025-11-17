@@ -21,6 +21,20 @@ export default function UserProfilePage() {
     }
   }, [params.userId])
 
+  // Poll for collaboration status updates every 5 seconds
+  useEffect(() => {
+    if (!params.userId || !profile?.collabStatus) return
+
+    // Only poll if status is pending and user is the sender
+    if (profile.collabStatus.status === 'pending' && profile.collabStatus.isSender) {
+      const pollInterval = setInterval(() => {
+        fetchProfile()
+      }, 5000) // Check every 5 seconds
+
+      return () => clearInterval(pollInterval)
+    }
+  }, [params.userId, profile?.collabStatus?.status, profile?.collabStatus?.isSender])
+
   const fetchProfile = async () => {
     try {
       const response = await fetch(`/api/profile/${params.userId}`)
@@ -49,7 +63,7 @@ export default function UserProfilePage() {
   const handleRemoveConnection = async () => {
     if (!profile?.collabStatus?.collabId) return
 
-    if (!confirm(`Are you sure you want to remove your connection with ${profile.profile.full_name}? This will delete all your messages and you'll need to send a new request to collaborate again.`)) {
+    if (!confirm(`Are you sure you want to remove your collaboration with ${profile.profile.full_name}? This will delete all your messages and you'll need to send a new request to collaborate again.`)) {
       return
     }
 
@@ -66,11 +80,12 @@ export default function UserProfilePage() {
         throw new Error(data.error || 'Failed to remove collaboration')
       }
 
-      // Refresh profile to show updated state
+      // Wait a bit for database to commit, then refresh profile
+      await new Promise(resolve => setTimeout(resolve, 500))
       await fetchProfile()
-      alert('Connection removed successfully')
+      alert('Collaboration removed successfully')
     } catch (err) {
-      alert('Error removing connection: ' + err.message)
+      alert('Error removing collaboration: ' + err.message)
     } finally {
       setRemoving(false)
     }
