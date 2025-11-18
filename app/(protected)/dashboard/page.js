@@ -35,6 +35,13 @@ export default async function DashboardPage() {
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id)
 
+  // Get active collaborations count
+  const { count: collabsCount } = await supabase
+    .from('collaborations')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'accepted')
+    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -47,7 +54,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="card">
           <div className="text-sm text-gray-600 mb-1">Total Signals</div>
           <div className="text-3xl font-bold text-primary-600">
@@ -59,6 +66,13 @@ export default async function DashboardPage() {
           <div className="text-sm text-gray-600 mb-1">Matches Found</div>
           <div className="text-3xl font-bold text-primary-600">
             {matchesCount || 0}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="text-sm text-gray-600 mb-1">Collaborators</div>
+          <div className="text-3xl font-bold text-primary-600">
+            {collabsCount || 0}
           </div>
         </div>
 
@@ -95,7 +109,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="card hover:shadow-lg transition-shadow">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Find Matches
@@ -105,6 +119,18 @@ export default async function DashboardPage() {
           </p>
           <Link href="/matches" className="btn-primary">
             View Matches
+          </Link>
+        </div>
+
+        <div className="card hover:shadow-lg transition-shadow">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Your Collaborators
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Connect and chat with your active collaboration partners
+          </p>
+          <Link href="/collaborators" className="btn-primary">
+            View Collaborators
           </Link>
         </div>
 

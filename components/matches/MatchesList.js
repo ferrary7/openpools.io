@@ -9,14 +9,24 @@ export default function MatchesList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [searchKeywords, setSearchKeywords] = useState([])
 
   useEffect(() => {
     fetchMatches()
   }, [])
 
   useEffect(() => {
+    // Parse comma-separated keywords
+    const keywords = searchKeyword
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k.length > 0)
+    setSearchKeywords(keywords)
+  }, [searchKeyword])
+
+  useEffect(() => {
     filterMatches()
-  }, [searchKeyword, allMatches])
+  }, [searchKeywords, allMatches])
 
   const fetchMatches = async () => {
     setLoading(true)
@@ -40,24 +50,28 @@ export default function MatchesList() {
   }
 
   const filterMatches = () => {
-    if (!searchKeyword.trim()) {
+    if (searchKeywords.length === 0) {
       setMatches(allMatches)
       return
     }
 
-    const keyword = searchKeyword.toLowerCase().trim()
     const filtered = allMatches.filter(match => {
-      // Check both common keywords AND all keywords of the matched user
-      const hasCommonKeyword = match.commonKeywords?.some(k =>
-        k.keyword?.toLowerCase().includes(keyword)
-      )
-      
-      const hasAnyKeyword = match.allKeywords?.some(k => {
-        const kw = typeof k === 'string' ? k : k.keyword
-        return kw?.toLowerCase().includes(keyword)
-      })
+      // Match must have ALL of the search keywords (AND logic)
+      return searchKeywords.every(keyword => {
+        const lowerKeyword = keyword.toLowerCase()
 
-      return hasCommonKeyword || hasAnyKeyword
+        // Check both common keywords AND all keywords of the matched user
+        const hasCommonKeyword = match.commonKeywords?.some(k =>
+          k.keyword?.toLowerCase().includes(lowerKeyword)
+        )
+
+        const hasAnyKeyword = match.allKeywords?.some(k => {
+          const kw = typeof k === 'string' ? k : k.keyword
+          return kw?.toLowerCase().includes(lowerKeyword)
+        })
+
+        return hasCommonKeyword || hasAnyKeyword
+      })
     })
 
     setMatches(filtered)
@@ -80,6 +94,12 @@ export default function MatchesList() {
     )
   }
 
+  const removeKeyword = (indexToRemove) => {
+    const keywords = searchKeyword.split(',').map(k => k.trim()).filter(k => k.length > 0)
+    keywords.splice(indexToRemove, 1)
+    setSearchKeyword(keywords.join(', '))
+  }
+
   return (
     <div>
       {/* Search Bar */}
@@ -89,7 +109,7 @@ export default function MatchesList() {
             type="text"
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            placeholder="Search by keyword (e.g., 'react', 'python', 'design')..."
+            placeholder="Search by keywords (comma-separated: react, python, design)..."
             className="input-field w-full pl-10"
           />
           <svg
@@ -116,12 +136,35 @@ export default function MatchesList() {
             </button>
           )}
         </div>
+
+        {/* Display keywords as tags */}
+        {searchKeywords.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {searchKeywords.map((keyword, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm font-medium"
+              >
+                {keyword}
+                <button
+                  onClick={() => removeKeyword(index)}
+                  className="hover:text-primary-900 transition-colors"
+                  aria-label={`Remove ${keyword}`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mb-4 flex justify-between items-center">
         <p className="text-gray-600">
           Found {matches.length} {matches.length === 1 ? 'match' : 'matches'}
-          {searchKeyword && ` for "${searchKeyword}"`}
+          {searchKeywords.length > 0 && ` for ${searchKeywords.length} keyword${searchKeywords.length > 1 ? 's' : ''}`}
         </p>
         <button
           onClick={fetchMatches}
@@ -136,14 +179,14 @@ export default function MatchesList() {
         <div className="card text-center py-12">
           <div className="text-4xl mb-4">🔍</div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
-            {searchKeyword ? 'No matches found' : 'No matches found yet'}
+            {searchKeywords.length > 0 ? 'No matches found' : 'No matches found yet'}
           </h3>
           <p className="text-gray-600">
-            {searchKeyword
-              ? `No users found with the keyword "${searchKeyword}". Try a different search term.`
+            {searchKeywords.length > 0
+              ? `No users found with the keyword${searchKeywords.length > 1 ? 's' : ''}: ${searchKeywords.join(', ')}. Try different search terms.`
               : 'There are no other users with keyword profiles yet. Check back later!'}
           </p>
-          {searchKeyword && (
+          {searchKeywords.length > 0 && (
             <button
               onClick={() => setSearchKeyword('')}
               className="mt-4 btn-secondary"

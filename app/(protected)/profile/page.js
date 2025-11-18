@@ -14,6 +14,7 @@ export default function ProfilePage() {
   const [savingKeywords, setSavingKeywords] = useState(false)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [editingKeywords, setEditingKeywords] = useState(false)
   const [formData, setFormData] = useState({
     full_name: '',
     bio: '',
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   useEffect(() => {
     loadProfile()
   }, [])
+
 
   const loadProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -124,6 +126,29 @@ export default function ProfilePage() {
       alert('Error saving profile: ' + error.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDeleteKeyword = async (indexToDelete) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const updatedKeywords = keywordProfile.keywords.filter((_, index) => index !== indexToDelete)
+
+      const { error } = await supabase
+        .from('keyword_profiles')
+        .update({
+          keywords: updatedKeywords,
+          total_keywords: updatedKeywords.length,
+          last_updated: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      await loadProfile()
+    } catch (error) {
+      alert('Error deleting keyword: ' + error.message)
     }
   }
 
@@ -401,7 +426,12 @@ export default function ProfilePage() {
       <div className="card">
         {keywordProfile?.keywords ? (
           <>
-            <KeywordDisplay keywords={keywordProfile.keywords} />
+            <KeywordDisplay
+              keywords={keywordProfile.keywords}
+              editMode={editingKeywords}
+              onDelete={handleDeleteKeyword}
+              onToggleEdit={() => setEditingKeywords(!editingKeywords)}
+            />
             <div className="mt-4 text-sm text-gray-600">
               Last updated: {new Date(keywordProfile.last_updated).toLocaleDateString()}
             </div>

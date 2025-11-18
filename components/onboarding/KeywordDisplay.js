@@ -1,6 +1,6 @@
 'use client'
 
-export default function KeywordDisplay({ keywords, loading }) {
+export default function KeywordDisplay({ keywords, loading, editMode = false, onDelete = null, onToggleEdit = null }) {
   if (loading) {
     return (
       <div className="bg-gray-50 p-6 rounded-lg">
@@ -18,9 +18,29 @@ export default function KeywordDisplay({ keywords, loading }) {
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Your Professional Signals ({keywords.length})
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Your Professional Signals ({keywords.length})
+        </h3>
+        {onToggleEdit && (
+          <button
+            onClick={onToggleEdit}
+            className="text-gray-600 hover:text-gray-900 transition-colors"
+            aria-label={editMode ? 'Stop editing keywords' : 'Edit keywords'}
+            title={editMode ? 'Done' : 'Edit keywords'}
+          >
+            {editMode ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
       <div className="flex flex-wrap gap-2">
         {keywords.map((kw, index) => {
           const keyword = typeof kw === 'string' ? kw : kw.keyword
@@ -28,19 +48,65 @@ export default function KeywordDisplay({ keywords, loading }) {
           const opacity = Math.max(0.5, weight)
 
           return (
-            <span
+            <div
               key={index}
-              className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm font-medium"
-              style={{ opacity }}
+              className={`relative ${editMode ? 'keyword-shake' : ''}`}
             >
-              {keyword}
-            </span>
+              <span
+                className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm font-medium inline-block"
+                style={{ opacity }}
+              >
+                {keyword}
+              </span>
+              {editMode && onDelete && (
+                <button
+                  onClick={() => onDelete(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors shadow-sm"
+                  aria-label={`Delete ${keyword}`}
+                >
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           )
         })}
       </div>
       <p className="text-xs text-gray-500 mt-4">
         Signals are weighted based on their source and importance
       </p>
+
+      <style jsx>{`
+        @keyframes jiggle {
+          0% { transform: rotate(-1deg); }
+          50% { transform: rotate(1deg); }
+          100% { transform: rotate(-1deg); }
+        }
+
+        .keyword-shake {
+          animation: jiggle 0.3s ease-in-out infinite;
+          transform-origin: center center;
+        }
+
+        .keyword-shake:nth-child(2n) {
+          animation-delay: 0.05s;
+        }
+
+        .keyword-shake:nth-child(3n) {
+          animation-delay: 0.1s;
+        }
+      `}</style>
     </div>
   )
 }
