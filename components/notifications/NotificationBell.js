@@ -190,19 +190,6 @@ export default function NotificationBell() {
               ))
             )}
           </div>
-
-          {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="px-4 py-3 border-t border-gray-200 text-center">
-              <Link
-                href="/notifications"
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                View all notifications
-              </Link>
-            </div>
-          )}
         </div>
       )}
     </div>

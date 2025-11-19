@@ -22,6 +22,7 @@ export default function ProfilePage() {
     job_title: '',
     location: '',
     phone_number: '',
+    show_phone_to_collaborators: true,
     linkedin_url: '',
     website: '',
     twitter_url: '',
@@ -62,6 +63,7 @@ export default function ProfilePage() {
         job_title: profileData.job_title || '',
         location: profileData.location || '',
         phone_number: profileData.phone_number || '',
+        show_phone_to_collaborators: profileData.show_phone_to_collaborators !== false,
         linkedin_url: profileData.linkedin_url || '',
         website: profileData.website || '',
         twitter_url: profileData.twitter_url || '',
@@ -289,15 +291,40 @@ export default function ProfilePage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
             {editing ? (
-              <input
-                type="tel"
-                value={formData.phone_number}
-                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
-                className="input-field w-full"
-                placeholder="+1 234 567 8900"
-              />
+              <div className="space-y-3">
+                <input
+                  type="tel"
+                  value={formData.phone_number}
+                  onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="+1 234 567 8900"
+                />
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!formData.show_phone_to_collaborators}
+                    onChange={(e) => setFormData({ ...formData, show_phone_to_collaborators: !e.target.checked })}
+                    className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    Hide phone number from collaborators
+                    <span className="block text-xs text-gray-500 mt-0.5">
+                      When enabled, only first 3 digits will be visible (e.g., +91*******)
+                    </span>
+                  </span>
+                </label>
+              </div>
             ) : (
-              <div className="text-gray-900">{profile?.phone_number || 'Not set'}</div>
+              <div>
+                <div className="text-gray-900">{profile?.phone_number || 'Not set'}</div>
+                {profile?.phone_number && (
+                  <div className="text-xs text-gray-500 mt-1">
+                    {profile?.show_phone_to_collaborators
+                      ? 'Full number visible to collaborators'
+                      : 'Only first 3 digits visible to collaborators'}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

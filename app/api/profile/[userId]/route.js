@@ -61,7 +61,23 @@ export async function GET(request, { params }) {
     // Only include contact info if collaborating
     if (isCollaborating) {
       publicProfile.email = profile.email
-      publicProfile.phone_number = profile.phone_number
+
+      // Handle phone number visibility based on user preference
+      if (profile.phone_number) {
+        if (profile.show_phone_to_collaborators) {
+          // Show full phone number
+          publicProfile.phone_number = profile.phone_number
+        } else {
+          // Show only first 3 digits
+          const phoneStr = profile.phone_number.toString()
+          if (phoneStr.length > 3) {
+            publicProfile.phone_number = phoneStr.substring(0, 3) + '*'.repeat(phoneStr.length - 3)
+          } else {
+            publicProfile.phone_number = phoneStr
+          }
+        }
+      }
+
       publicProfile.linkedin_url = profile.linkedin_url
       publicProfile.website = profile.website
       publicProfile.twitter_url = profile.twitter_url

@@ -178,7 +178,7 @@ export default function CollaboratorsPage() {
               return collab.company
             }).filter(Boolean)).size}
           </div>
-          <div className="text-sm text-gray-600 mt-1">Companies</div>
+          <div className="text-sm text-gray-600 mt-1">Companies Your Collaborators Work With</div>
         </div>
       </div>
 
