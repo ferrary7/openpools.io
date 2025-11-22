@@ -445,7 +445,7 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">AI-Powered Insights</h3>
-                  <p className="text-gray-600">Google Gemini analyzes your professional profile to extract the most relevant skills and keywords.</p>
+                  <p className="text-gray-600">Our Human Powered AI analyzes your professional profile to extract the most relevant skills and keywords.</p>
                 </div>
               </div>
             </div>

@@ -34,3 +34,84 @@
     @apply bg-white rounded-xl shadow-md p-6;
   }
 }
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Radial gradient for Antenna hero - subtle for readability */
+.bg-radial-gradient {
+  background: radial-gradient(ellipse at center, rgba(30, 30, 30, 0.6) 0%, rgba(30, 30, 30, 0.3) 25%, transparent 55%);
+}
+
+/* Keyword fabric container */
+.keyword-fabric {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile scrolling animations for keywords */
+@keyframes scroll-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll-right-fast {
+  animation: scroll-right 12s linear infinite;
+}
+
+.animate-scroll-right-medium {
+  animation: scroll-right 18s linear infinite;
+}
+
+.animate-scroll-right-slow {
+  animation: scroll-right 25s linear infinite;
+}
+
+.animate-scroll-left-fast {
+  animation: scroll-left 12s linear infinite;
+}
+
+.animate-scroll-left-medium {
+  animation: scroll-left 18s linear infinite;
+}
+
+.animate-scroll-left-slow {
+  animation: scroll-left 25s linear infinite;
+}
