@@ -134,7 +134,7 @@ export default function ProfilePage() {
       <div className="card mb-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900">
-            Add Keywords from PDF
+            Add Signals from PDF
           </h2>
           {!showPdfUploader && (
             <button
