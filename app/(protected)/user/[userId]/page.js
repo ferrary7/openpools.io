@@ -23,7 +23,7 @@ export default function UserProfilePage() {
 
   // Poll for collaboration status updates every 5 seconds
   useEffect(() => {
-    if (!params.userId || !profile?.collabStatus) return
+    if (!profile?.collabStatus) return
 
     // Only poll if status is pending and user is the sender
     if (profile.collabStatus.status === 'pending' && profile.collabStatus.isSender) {
@@ -33,7 +33,7 @@ export default function UserProfilePage() {
 
       return () => clearInterval(pollInterval)
     }
-  }, [params.userId, profile?.collabStatus?.status, profile?.collabStatus?.isSender])
+  }, [profile?.collabStatus?.status, profile?.collabStatus?.isSender])
 
   const fetchProfile = async () => {
     try {
@@ -165,7 +165,7 @@ export default function UserProfilePage() {
 
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
           <CollabButton
-            userId={params.userId}
+            userId={userData.id}
             collabStatus={collabStatus}
             onCollabSuccess={handleCollabSuccess}
           />
