@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import DNACertificate from './DNACertificate'
 
@@ -8,12 +8,34 @@ export default function DNAShare({ profile, keywordProfile, isOwnDNA = true }) {
   const [copied, setCopied] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [selectedMessage, setSelectedMessage] = useState(0)
+  const [pinnedShowcaseItems, setPinnedShowcaseItems] = useState([])
 
   const shareUrl = typeof window !== 'undefined' && profile?.id
     ? `${window.location.origin}/dna/${profile.username || profile.id}`
     : ''
   const userName = profile?.full_name || 'My'
   const firstName = profile?.full_name?.split(' ')[0] || 'their'
+
+  // Fetch pinned showcase items
+  useEffect(() => {
+    const fetchPinnedItems = async () => {
+      if (!profile?.id) return
+
+      try {
+        const response = await fetch(`/api/showcase?user_id=${profile.id}`)
+        const data = await response.json()
+
+        if (data.items) {
+          const pinned = data.items.filter(item => item.pinned).slice(0, 3)
+          setPinnedShowcaseItems(pinned)
+        }
+      } catch (error) {
+        console.error('Error fetching pinned showcase items:', error)
+      }
+    }
+
+    fetchPinnedItems()
+  }, [profile?.id])
 
   // If not own DNA, show "Create Yours" button instead of share options
   if (!isOwnDNA) {
@@ -131,7 +153,7 @@ export default function DNAShare({ profile, keywordProfile, isOwnDNA = true }) {
 
       // Wrap the render in a promise to wait for completion
       await new Promise((resolve) => {
-        root.render(<DNACertificate profile={profile} keywordProfile={keywordProfile} />)
+        root.render(<DNACertificate profile={profile} keywordProfile={keywordProfile} showcaseItems={pinnedShowcaseItems} />)
         // Give it more time to render and load images
         setTimeout(resolve, 1000)
       })

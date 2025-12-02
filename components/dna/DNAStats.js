@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function DNAStats({ profile, keywordProfile, collaborations, isOwnDNA = true }) {
   const [mounted, setMounted] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
   const [animatedValues, setAnimatedValues] = useState({
     keywords: 0,
     collaborations: 0,
     uniqueness: 0,
     days: 0
   })
+  const sectionRef = useRef(null)
 
   // Personalized text based on ownership
   const firstName = profile?.full_name?.split(' ')[0] || 'their'
@@ -19,8 +21,39 @@ export default function DNAStats({ profile, keywordProfile, collaborations, isOw
 
   useEffect(() => {
     setMounted(true)
+  }, [])
 
-    // Animate numbers counting up
+  // Intersection Observer to trigger animation when section is visible
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !isVisible) {
+            setIsVisible(true)
+          }
+        })
+      },
+      {
+        threshold: 0.2, // Trigger when 20% of the section is visible
+        rootMargin: '0px'
+      }
+    )
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current)
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current)
+      }
+    }
+  }, [isVisible])
+
+  // Animate numbers counting up when visible
+  useEffect(() => {
+    if (!isVisible) return
+
     const targets = {
       keywords: keywordProfile?.total_keywords || 0,
       collaborations: collaborations?.length || 0,
@@ -51,7 +84,7 @@ export default function DNAStats({ profile, keywordProfile, collaborations, isOw
     }, interval)
 
     return () => clearInterval(timer)
-  }, [profile, keywordProfile, collaborations])
+  }, [isVisible, profile, keywordProfile, collaborations])
 
   // Calculate uniqueness insights
   const getRareSkills = () => {
@@ -85,7 +118,7 @@ export default function DNAStats({ profile, keywordProfile, collaborations, isOw
   const uniquenessScore = animatedValues.uniqueness
 
   return (
-    <section className="relative py-32 overflow-hidden bg-[#1E1E1E]">
+    <section ref={sectionRef} className="relative py-32 overflow-hidden bg-[#1E1E1E]">
       {/* Subtle glow accents */}
       <div className="absolute inset-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-500/5 rounded-full blur-3xl"></div>

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { isUUID } from '@/lib/username'
 import DNAHero from '@/components/dna/DNAHero'
 import DNAStats from '@/components/dna/DNAStats'
+import DNAShowcase from '@/components/dna/DNAShowcase'
 import DNAShare from '@/components/dna/DNAShare'
 
 export default function UserDNAPage() {
@@ -122,6 +123,9 @@ export default function UserDNAPage() {
     <div className="min-h-screen bg-[#1E1E1E]">
       {/* Hero Section with DNA Helix */}
       <DNAHero profile={profile} keywordProfile={keywordProfile} isOwnDNA={isOwnDNA} />
+
+      {/* Showcase Section */}
+      <DNAShowcase profile={profile} isOwnDNA={isOwnDNA} />
 
       {/* Stats Section */}
       <DNAStats

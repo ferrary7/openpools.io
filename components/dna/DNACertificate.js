@@ -2,8 +2,23 @@
 
 import { useEffect, useRef } from "react";
 
-export default function DNACertificate({ profile, keywordProfile }) {
+export default function DNACertificate({ profile, keywordProfile, showcaseItems = [] }) {
   const canvasRef = useRef(null);
+
+  const SHOWCASE_TYPES = [
+    { value: 'project', label: 'Project', icon: '💻', color: '#E84499' },
+    { value: 'certification', label: 'Certification', icon: '🎓', color: '#9333EA' },
+    { value: 'research', label: 'Research', icon: '🔬', color: '#E84499' },
+    { value: 'publication', label: 'Publication', icon: '📚', color: '#9333EA' },
+    { value: 'talk', label: 'Talk', icon: '🎤', color: '#E84499' },
+    { value: 'course', label: 'Course', icon: '📖', color: '#9333EA' },
+    { value: 'award', label: 'Award', icon: '🏆', color: '#F59E0B' },
+    { value: 'patent', label: 'Patent', icon: '💡', color: '#E84499' }
+  ]
+
+  const getTypeConfig = (type) => {
+    return SHOWCASE_TYPES.find(t => t.value === type) || SHOWCASE_TYPES[0]
+  }
 
   /* ------------------------------------------------------------
      CANVAS HELIX
@@ -130,6 +145,16 @@ export default function DNACertificate({ profile, keywordProfile }) {
       {/* Clean base */}
       <div className="absolute inset-0 bg-white pointer-events-none"></div>
 
+      {/* Watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <img
+          src="/icon.svg"
+          alt="OpenPools Watermark"
+          className="w-[600px] h-[600px] opacity-[0.08]"
+          style={{ filter: 'grayscale(100%)' }}
+        />
+      </div>
+
       <div className="relative z-10 px-20 py-14 flex flex-col justify-between h-full">
         {/* HEADER */}
         <header className="text-center mb-14">
@@ -185,7 +210,7 @@ export default function DNACertificate({ profile, keywordProfile }) {
             </div>
 
             {/* Certificate statement */}
-            <p className="text-lg text-gray-700 text-center mt-8 italic leading-relaxed max-w-[700px] mx-auto">
+            <p className="text-lg text-gray-700 text-center mt-8 italic leading-relaxed max-w-[700px] mx-auto mb-8">
               has been formally recognized for demonstrating a consistently high
               level of professional competence across multiple verified domains.
               Their contributions, skill depth, and collaborative potential have
@@ -193,6 +218,30 @@ export default function DNACertificate({ profile, keywordProfile }) {
               Network, reflecting both technical excellence and a commitment to
               continuous growth.
             </p>
+
+            {/* STATS - Now in left column */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                <div className="text-4xl font-semibold text-primary-600">
+                  {keywordProfile?.total_keywords || 0}
+                </div>
+                <div className="text-xs tracking-wide text-gray-600 mt-2 uppercase">
+                  Verified Skills
+                </div>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-2xl p-5 text-center shadow-sm">
+                <div className="text-4xl font-semibold text-[#E84499]">
+                  {keywordProfile?.keywords
+                    ? Math.floor(keywordProfile.keywords.length / 10) * 10 + 10
+                    : 90}
+                  %
+                </div>
+                <div className="text-xs tracking-wide text-gray-600 mt-2 uppercase">
+                  Uniqueness
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* RIGHT: HELIX */}
@@ -209,43 +258,55 @@ export default function DNACertificate({ profile, keywordProfile }) {
           </div>
         </div>
 
-        {/* STATS */}
-        <div className="grid grid-cols-3 gap-8 mb-12">
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-            <div className="text-5xl font-semibold text-primary-600">
-              {keywordProfile?.total_keywords || 0}
-            </div>
-            <div className="text-xs tracking-wide text-gray-600 mt-2 uppercase">
-              Verified Skills
-            </div>
-          </div>
+        {/* FEATURED ACHIEVEMENTS */}
+        {showcaseItems && showcaseItems.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 uppercase tracking-wide text-center mb-6">
+              Featured Achievements
+            </h3>
 
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-            <div className="text-5xl font-semibold text-purple-600">
-              {profile?.created_at
-                ? Math.floor(
-                    (new Date() - new Date(profile.created_at)) /
-                      (1000 * 60 * 60 * 24)
-                  )
-                : 0}
-            </div>
-            <div className="text-xs tracking-wide text-gray-600 mt-2 uppercase">
-              Days Active
+            <div className="grid grid-cols-3 gap-6">
+              {showcaseItems.map((item, index) => {
+                const typeConfig = getTypeConfig(item.type)
+                return (
+                  <div key={index} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm h-[280px] flex flex-col overflow-hidden">
+                    <div className="flex items-start gap-2.5 mb-3 flex-shrink-0">
+                      <div className="w-9 h-9 bg-gradient-to-br from-primary-500/15 to-purple-500/15 rounded-lg flex items-center justify-center text-base border border-primary-500/20 flex-shrink-0">
+                        {typeConfig.icon}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-[11px] font-bold text-primary-600 uppercase tracking-wide leading-tight">
+                          {typeConfig.label}
+                        </div>
+                      </div>
+                    </div>
+                    <h4 className="text-[15px] font-bold text-gray-800 mb-3 leading-[1.4] break-words" style={{
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: '2',
+                      WebkitBoxOrient: 'vertical',
+                      height: '42px'
+                    }}>
+                      {item.title}
+                    </h4>
+                    {item.description && (
+                      <p className="text-[13px] text-gray-600 leading-[1.6] break-words flex-1" style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: '8',
+                        WebkitBoxOrient: 'vertical'
+                      }}>
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-sm">
-            <div className="text-5xl font-semibold text-[#E84499]">
-              {keywordProfile?.keywords
-                ? Math.floor(keywordProfile.keywords.length / 10) * 10 + 10
-                : 90}
-              %
-            </div>
-            <div className="text-xs tracking-wide text-gray-600 mt-2 uppercase">
-              Uniqueness
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* SKILLS */}
         <div className="mb-10">
