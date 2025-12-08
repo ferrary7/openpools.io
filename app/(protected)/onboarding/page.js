@@ -397,34 +397,27 @@ export default function OnboardingPage() {
       return
     }
 
-    // Encourage username but don't require it
+    // Username is now required
     if (!profileData.username?.trim()) {
-      const proceed = window.confirm(
-        '💡 Username Recommendation\n\n' +
-        'Setting a username now will give you a personalized profile URL (openpools.in/dna/yourname).\n\n' +
-        'You can add it later, but we recommend doing it now.\n\n' +
-        'Do you want to continue without a username?'
-      )
-      if (!proceed) {
-        // Scroll to username field
-        setTimeout(() => {
-          const usernameInput = document.querySelector('input[placeholder="your_username"]')
-          if (usernameInput) {
-            usernameInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            usernameInput.focus()
-          }
-        }, 100)
-        return
-      }
+      alert('⚠️ Username is required\n\nPlease set a username to create your personalized profile URL.')
+      // Scroll to username field
+      setTimeout(() => {
+        const usernameInput = document.querySelector('input[placeholder="your_username"]')
+        if (usernameInput) {
+          usernameInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          usernameInput.focus()
+        }
+      }, 100)
+      return
     }
 
     // Check if username is available before proceeding
-    if (profileData.username?.trim() && usernameError) {
+    if (usernameError) {
       alert('⚠️ Please fix the username error before continuing:\n\n' + usernameError)
       return
     }
 
-    if (profileData.username?.trim() && usernameAvailable === false) {
+    if (usernameAvailable === false) {
       alert('⚠️ The username "' + profileData.username + '" is not available. Please choose a different one.')
       return
     }
@@ -639,6 +632,7 @@ export default function OnboardingPage() {
                     value={profileData.username}
                     onChange={(e) => handleUsernameChange(e.target.value)}
                     placeholder="your_username"
+                    required
                     maxLength={30}
                     error={usernameError}
                     icon="@"
