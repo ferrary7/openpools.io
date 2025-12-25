@@ -98,12 +98,12 @@ export default function CardsDownloadModal({
 
   const handleLinkedInShare = () => {
     const message = shareMessages[selectedMessage]
-    navigator.clipboard.writeText(message).then(() => {
-      showNotification('✓ Message copied! Paste it in LinkedIn')
-    })
-
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`
+    
+    // LinkedIn share with both quote (message) and URL
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(message)}`
     window.open(linkedinUrl, '_blank', 'width=600,height=600')
+    
+    showNotification('✓ Sharing on LinkedIn...')
     
     // Also trigger the download
     handleDownload()
