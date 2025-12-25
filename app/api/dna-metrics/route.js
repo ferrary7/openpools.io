@@ -46,7 +46,8 @@ export async function GET(request) {
       : 50
 
     // 3. RARE SKILLS - Find skills only few users have
-    const userKeywords = (keywordProfile.keywords || []).map(k =>
+    const keywordsArray = Array.isArray(keywordProfile.keywords) ? keywordProfile.keywords : []
+    const userKeywords = keywordsArray.map(k =>
       (typeof k === 'string' ? k : k.keyword || '').toLowerCase()
     )
 
@@ -57,7 +58,8 @@ export async function GET(request) {
 
     const skillCounts = {}
     allKeywordProfiles?.forEach(kp => {
-      const keywords = (kp.keywords || []).map(k =>
+      const keywordsArray = Array.isArray(kp.keywords) ? kp.keywords : []
+      const keywords = keywordsArray.map(k =>
         (typeof k === 'string' ? k : k.keyword || '').toLowerCase()
       )
       keywords.forEach(kw => {
@@ -88,7 +90,8 @@ export async function GET(request) {
 
         let comboCount = 0
         allKeywordProfiles?.forEach(kp => {
-          const keywords = (kp.keywords || []).map(k =>
+          const keywordsArray = Array.isArray(kp.keywords) ? kp.keywords : []
+          const keywords = keywordsArray.map(k =>
             (typeof k === 'string' ? k : k.keyword || '').toLowerCase()
           )
           if (keywords.includes(skill1) && keywords.includes(skill2)) {
@@ -246,7 +249,8 @@ export async function GET(request) {
     const similarProfessionals = []
     if (allProfiles) {
       allProfiles.forEach(otherProfile => {
-        const otherSkills = (otherProfile.keywords || []).map(k =>
+        const otherKeywordsArray = Array.isArray(otherProfile.keywords) ? otherProfile.keywords : []
+        const otherSkills = otherKeywordsArray.map(k =>
           (typeof k === 'string' ? k : k.keyword || '').toLowerCase()
         )
 
@@ -279,7 +283,8 @@ export async function GET(request) {
 
     if (allProfiles) {
       allProfiles.forEach(otherProfile => {
-        const otherSkills = (otherProfile.keywords || []).map(k =>
+        const otherKeywordsArray = Array.isArray(otherProfile.keywords) ? otherProfile.keywords : []
+        const otherSkills = otherKeywordsArray.map(k =>
           (typeof k === 'string' ? k : k.keyword || '').toLowerCase()
         )
 
